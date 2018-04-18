@@ -1,6 +1,20 @@
 const db = require('./db');
 
 const onSocketConnect = io => socket => {
+  socket.on('LOGIN', ({ username }, ack) => {
+    if (!db.userExists(username)) {
+      let deleteUser = db.create(username, socket.id);
+      io.on('disconnect', () => {
+        deleteUser();
+        socket.emit('UPDATE_USER_LIST', { users: db.all() });
+      });
+    } else {
+      if (typeof ack === 'function') {
+        ack('The username already exists');
+      }
+    }
+  });
+
   // TODO 2.1 Listen for login events (eg "LOGIN") from client and save the user using db.create(username, socket.id)
   // TODO 2.2 Prevent users from using an existing username using the "acknowledgement" from the client
   // TODO 2.3 Emit an update user list event (eg "UPDATE_USER_LIST") to all clients when there is a login event
